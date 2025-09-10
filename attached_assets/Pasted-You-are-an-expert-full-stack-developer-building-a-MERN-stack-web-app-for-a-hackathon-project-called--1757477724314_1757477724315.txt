@@ -1,0 +1,179 @@
+You are an expert full-stack developer building a MERN stack web app for a hackathon project called Sehat Saathi, a bilingual healthcare platform for rural and underserved communities.
+
+🎯 MVP Goals
+
+Implement a functional demo that shows:
+
+Patient registration/login.
+
+Doctor registration/login.
+
+Appointment booking & approval.
+
+Prescription flow.
+
+Simple rule-based chatbot.
+
+Map with nearby pharmacies & medicine stock.
+
+Bilingual UI (English + Hindi/local).
+
+🛠 Tech Stack
+
+Frontend: React.js + Tailwind CSS, React Router, React i18next.
+
+Backend: Node.js + Express.
+
+Database: MongoDB with Mongoose (Atlas or local).
+
+Auth: JWT-based authentication.
+
+Map: Leaflet.js + OpenStreetMap.
+
+Chatbot: JSON-driven decision tree (menu-style).
+
+📂 Project Structure
+/backend
+  /models (Mongoose schemas)
+  /routes (auth, appointments, prescriptions, pharmacy)
+  /controllers
+  server.js
+
+/frontend
+  /src/pages (Login, Register, PatientDashboard, DoctorDashboard)
+  /src/components (Chatbot, AppointmentForm, PrescriptionList, Map)
+  /src/i18n (translation JSONs for English & Hindi)
+
+🗄 Database Schemas (Mongoose)
+
+User (patients & doctors)
+
+{
+  name: String,
+  email: String,
+  password: String, // hashed
+  role: { type: String, enum: ["patient", "doctor"] },
+  specialization: String // only for doctors
+}
+
+
+Appointment
+
+{
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  date: Date,
+  status: { type: String, enum: ["pending", "confirmed", "rejected"], default: "pending" }
+}
+
+
+Prescription
+
+{
+  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  medicines: [String],
+  notes: String
+}
+
+
+PharmacyStock
+
+{
+  pharmacyName: String,
+  location: { lat: Number, lng: Number },
+  medicines: { type: Map, of: Number } // {"Paracetamol": 20, "ORS": 15}
+}
+
+🔌 Backend Requirements
+
+Auth Routes
+
+/auth/register (patient/doctor)
+
+/auth/login → returns JWT
+
+Appointment Routes
+
+/appointments/create (patient books doctor)
+
+/appointments/list/:userId (list for patient/doctor)
+
+/appointments/update/:id (doctor confirms/rejects)
+
+Prescription Routes
+
+/prescriptions/add (doctor adds prescription)
+
+/prescriptions/by-patient/:id (patient views)
+
+Pharmacy Routes
+
+/pharmacy/list → return pharmacies + stock (mock data seeded).
+
+💻 Frontend Requirements
+
+Auth Pages
+
+Register/Login with role toggle (patient/doctor).
+
+Patient Dashboard
+
+Book appointment with doctor list.
+
+See appointment status.
+
+View prescriptions.
+
+Use chatbot (JSON-driven: “Press 1 for fever info”, “Press 2 for vaccination info”).
+
+Toggle language (English/Hindi).
+
+Doctor Dashboard
+
+View patient queue.
+
+Approve/reject appointments.
+
+Add prescription.
+
+Resource Locator
+
+Map with pharmacies & stock (Leaflet + mock data).
+
+🌍 Bilingual Support
+
+Use react-i18next.
+
+Store translations in /src/i18n/en.json and /src/i18n/hi.json.
+
+All UI labels, chatbot prompts, and health tips must switch between languages.
+
+📌 Hackathon Priorities
+
+Focus on working flows over perfection.
+
+Pre-seed DB with a few doctors, patients, and pharmacies.
+
+Use mock pharmacy stock (JSON or seeded DB).
+
+Keep UI big-button, icon-friendly, minimal text → rural friendly.
+
+⚡ Delivery
+
+Generate a scaffolded, runnable MERN codebase with:
+
+Backend: Node.js + Express + MongoDB + JWT.
+
+Frontend: React + Tailwind + i18n + Leaflet map.
+
+Chatbot: JSON decision tree.
+
+Role-based dashboards.
+
+Simple pharmacy locator.
+
+Both /frontend and /backend should run independently with npm install && npm start.
+
+👉 Build the entire project in one go with the above requirements.
