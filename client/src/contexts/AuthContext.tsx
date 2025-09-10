@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "@shared/schema";
-import { getAuthToken, setAuthToken, clearAuthToken, authApi } from "@/lib/auth";
+import { getAuthToken, setAuthToken, clearAuthToken, authApi, getStoredUser, setStoredUser, clearStoredUser } from "@/lib/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -28,12 +28,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const token = getAuthToken();
+    const cached = getStoredUser();
+    if (cached) {
+      setUser(cached);
+    }
     if (token) {
       authApi
         .getCurrentUser()
-        .then(setUser)
+        .then(u => { setUser(u); setStoredUser(u); })
         .catch(() => {
           clearAuthToken();
+          clearStoredUser();
         })
         .finally(() => setIsLoading(false));
     } else {
@@ -41,21 +46,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  // Multi-tab sync & passive refresh
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === 'auth_token') {
+        const token = getAuthToken();
+        if (!token) {
+          setUser(null);
+          clearStoredUser();
+          return;
+        }
+        // token added/changed: refetch to ensure user is current
+        authApi.getCurrentUser()
+          .then(u => { setUser(u); setStoredUser(u); })
+          .catch(() => { clearAuthToken(); clearStoredUser(); setUser(null); });
+      } else if (e.key === 'auth_user') {
+        const cached = getStoredUser();
+        if (cached) setUser(cached);
+      }
+    }
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const login = async (email: string, password: string) => {
-    const { user, token } = await authApi.login({ email, password });
-    setAuthToken(token);
-    setUser(user);
+    const response = await authApi.login({ email, password });
+  if (!response.token) throw new Error("No token received from server");
+  setAuthToken(response.token);
+  setUser(response.user);
+  setStoredUser(response.user);
   };
 
   const register = async (userData: any) => {
-    const { user, token } = await authApi.register(userData);
-    setAuthToken(token);
-    setUser(user);
+    const response = await authApi.register(userData);
+  if (!response.token) throw new Error("No token received from server");
+  setAuthToken(response.token);
+  setUser(response.user);
+  setStoredUser(response.user);
   };
 
   const logout = () => {
-    clearAuthToken();
-    setUser(null);
+  clearAuthToken();
+  clearStoredUser();
+  setUser(null);
   };
 
   return (

@@ -58,7 +58,6 @@
   "generalMedicine": "सामान्य चिकित्सा",
   "pediatrics": "बाल चिकित्सा",
   "gynecology": "स्त्री रोग",
-  "emergency": "आपातकाल",
   "logout": "लॉगआउट",
   "close": "बंद करें",
   "book": "बुक करें",
@@ -66,4 +65,8 @@
   "approve": "स्वीकार करें",
   "reject": "अस्वीकार करें",
   "sehatSaathi": "सेहत साथी"
+  ,"speakHindi": "हिंदी में बोलें"
+  ,"stopListening": "रोकें"
+  ,"voiceNotSupported": "ब्राउज़र हिंदी वॉइस पहचान का समर्थन नहीं करता।"
+  ,"listening": "सुन रहा है..."
 }

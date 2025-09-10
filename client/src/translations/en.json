@@ -58,7 +58,6 @@
   "generalMedicine": "General Medicine",
   "pediatrics": "Pediatrics",
   "gynecology": "Gynecology",
-  "emergency": "Emergency",
   "logout": "Logout",
   "close": "Close",
   "book": "Book",
@@ -66,4 +65,8 @@
   "approve": "Approve",
   "reject": "Reject",
   "sehatSaathi": "Sehat Saathi"
+  ,"speakHindi": "Speak in Hindi"
+  ,"stopListening": "Stop"
+  ,"voiceNotSupported": "Browser does not support Hindi speech recognition."
+  ,"listening": "Listening..."
 }

@@ -25,6 +25,7 @@ import {
   Minus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from '@/components/ui/skeleton';
 
 const prescriptionSchema = z.object({
   medicines: z.array(z.object({
@@ -43,6 +44,8 @@ export default function DoctorDashboard() {
   const queryClient = useQueryClient();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [approveData, setApproveData] = useState<{comment: string; clinicAddress: string; clinicPhone: string; appointmentId: string | null}>({comment: "", clinicAddress: "", clinicPhone: "", appointmentId: null});
 
   // Fetch appointments for doctor
   const { data: appointments, isLoading } = useQuery({
@@ -59,8 +62,8 @@ export default function DoctorDashboard() {
 
   // Update appointment status mutation
   const updateAppointmentStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const response = await apiRequest("PATCH", `/api/appointments/${id}/status`, { status });
+    mutationFn: async ({ id, status, doctorComment, clinicAddress, clinicPhone }: { id: string; status: string; doctorComment?: string; clinicAddress?: string; clinicPhone?: string }) => {
+      const response = await apiRequest("PATCH", `/api/appointments/${id}/status`, { status, doctorComment, clinicAddress, clinicPhone });
       return response.json();
     },
     onSuccess: () => {
@@ -110,7 +113,9 @@ export default function DoctorDashboard() {
   });
 
   const handleApprove = (appointmentId: string) => {
-    updateAppointmentStatus.mutate({ id: appointmentId, status: "confirmed" });
+    // open modal to collect details instead of immediate approve
+    setApproveData({ comment: "", clinicAddress: "", clinicPhone: "", appointmentId });
+    setShowApproveModal(true);
   };
 
   const handleReject = (appointmentId: string) => {
@@ -138,6 +143,12 @@ export default function DoctorDashboard() {
     }
   };
 
+  const submitApprove = () => {
+    if (!approveData.appointmentId) return;
+    updateAppointmentStatus.mutate({ id: approveData.appointmentId, status: "confirmed", doctorComment: approveData.comment, clinicAddress: approveData.clinicAddress, clinicPhone: approveData.clinicPhone });
+    setShowApproveModal(false);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed": return "bg-success text-success-foreground";
@@ -148,8 +159,8 @@ export default function DoctorDashboard() {
     }
   };
 
-  const pendingAppointments = appointments?.filter((apt: any) => apt.status === "pending") || [];
-  const todayAppointments = appointments?.filter((apt: any) => {
+  const pendingAppointments = (appointments as any[] | undefined)?.filter((apt: any) => apt.status === "pending") || [];
+  const todayAppointments = (appointments as any[] | undefined)?.filter((apt: any) => {
     const today = new Date().toDateString();
     return new Date(apt.date).toDateString() === today;
   }) || [];
@@ -195,7 +206,7 @@ export default function DoctorDashboard() {
               <div className="bg-success/10 rounded-lg p-4 text-center">
                 <CheckCircle className="text-success text-2xl mb-2 mx-auto" />
                 <p className="text-2xl font-bold text-success" data-testid="stat-total">
-                  {appointments?.length || 0}
+                  { (appointments as any[] | undefined)?.length || 0 }
                 </p>
                 <p className="text-sm text-muted-foreground">Total Appointments</p>
               </div>
@@ -213,7 +224,9 @@ export default function DoctorDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {isLoading ? (
-                  <div className="text-center py-8">Loading appointments...</div>
+                  <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_,i) => <Skeleton key={i} className="h-28 w-full" />)}
+                  </div>
                 ) : pendingAppointments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending appointments
@@ -282,7 +295,11 @@ export default function DoctorDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {todayAppointments.length === 0 ? (
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_,i) => <Skeleton key={i} className="h-24 w-full" />)}
+                  </div>
+                ) : todayAppointments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No appointments today
                   </div>
@@ -442,6 +459,33 @@ export default function DoctorDashboard() {
               </Button>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Modal */}
+      <Dialog open={showApproveModal} onOpenChange={setShowApproveModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Clinic Details & Comment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Doctor Comment</label>
+              <Textarea value={approveData.comment} onChange={e => setApproveData(a => ({...a, comment: e.target.value}))} placeholder="e.g., Please arrive 10 minutes early" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Clinic Address</label>
+              <Input value={approveData.clinicAddress} onChange={e => setApproveData(a => ({...a, clinicAddress: e.target.value}))} placeholder="Clinic address" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Clinic Phone</label>
+              <Input value={approveData.clinicPhone} onChange={e => setApproveData(a => ({...a, clinicPhone: e.target.value}))} placeholder="Contact number" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowApproveModal(false)}>Cancel</Button>
+              <Button onClick={submitApprove} disabled={updateAppointmentStatus.isPending}>{updateAppointmentStatus.isPending ? "Saving..." : "Confirm"}</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

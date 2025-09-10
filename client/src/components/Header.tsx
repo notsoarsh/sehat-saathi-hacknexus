@@ -51,12 +51,13 @@ export default function Header() {
             
             <Button
               variant="ghost"
-              size="icon"
               onClick={logout}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2"
               data-testid="button-logout"
+              aria-label={t('logout')}
             >
               <LogOut className="w-4 h-4" />
+              <span className="text-sm font-medium">{t('logout')}</span>
             </Button>
           </div>
         </div>

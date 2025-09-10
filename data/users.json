@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Dr. प्रिया शर्मा",
+    "email": "priya.sharma@sehat.com",
+    "password": "$2b$10$osWyYAOPOlnnhDoRMj6oUO/j2BM0jDS6AUuZ55RdD2fGTDKmp6UC2",
+    "role": "doctor",
+    "specialization": "General Medicine",
+    "id": "f7ecf0bb-d48b-4b37-ac0b-b953c13e4de0",
+    "createdAt": "2025-09-10T07:57:26.634Z"
+  },
+  {
+    "name": "Dr. राज पटेल",
+    "email": "raj.patel@sehat.com",
+    "password": "$2b$10$eGMG68DnYOOPoO4Zdk0Bh.QO.W9RFB8o12ja.0BTjmCNioPM81ViK",
+    "role": "doctor",
+    "specialization": "Pediatrics",
+    "id": "346a6a12-3393-43e7-b025-50f9537ec4e2",
+    "createdAt": "2025-09-10T07:57:26.635Z"
+  },
+  {
+    "name": "Dr. सुनीता वर्मा",
+    "email": "sunita.verma@sehat.com",
+    "password": "$2b$10$OLeca72HcYT9HENg6//jF.PdGAuRgyxNscdNaJRJtO0Z6zbDmK.uC",
+    "role": "doctor",
+    "specialization": "Gynecology",
+    "id": "5b685d0a-e9d2-4c25-8587-cc5be15221de",
+    "createdAt": "2025-09-10T07:57:26.635Z"
+  },
+  {
+    "name": "राज कुमार",
+    "email": "raj.kumar@patient.com",
+    "password": "$2b$10$b8SBesIdvPFxS/01VSq2IeasDxJrEBwDbkHHwgOWIq24Z/SV3J2wm",
+    "role": "patient",
+    "id": "e8bb441d-e3ed-4d9d-a379-26d461f7658a",
+    "specialization": null,
+    "createdAt": "2025-09-10T07:57:26.739Z"
+  },
+  {
+    "name": "abha",
+    "email": "abha@gmail.com",
+    "password": "$2b$10$QzcxPz/uakbqQaT1yq3opuM6z77iACaE/P1cRbQcZMWaTlg6t8Snm",
+    "role": "patient",
+    "specialization": null,
+    "id": "b5f90eb0-ff47-48ce-a6ec-7d77ef502007",
+    "createdAt": "2025-09-10T08:03:39.535Z"
+  },
+  {
+    "name": "abc",
+    "email": "ananya@abc.com",
+    "password": "$2b$10$3c4bpv.whfl.aCHpjyDNSu.LO1JHbKL2M9QTfZI3buqO6RN4e3mQC",
+    "role": "patient",
+    "specialization": null,
+    "id": "29a7951b-6e3e-40d7-a356-c6644ebc0976",
+    "createdAt": "2025-09-10T08:08:27.290Z"
+  },
+  {
+    "name": "Ananya Tuli",
+    "email": "ananya@gmail.com",
+    "password": "$2b$10$coKXb94jk.A9.HE3/Jequuz6W8IauGoDwLFICvUtjHjFPcuo20uA2",
+    "role": "doctor",
+    "specialization": "Pediatrics",
+    "id": "cb22ab70-be2d-4729-99d8-a3130c57c547",
+    "createdAt": "2025-09-10T08:09:30.865Z"
+  },
+  {
+    "name": "Arshpal",
+    "email": "arshpalwork@gmail.com",
+    "password": "$2b$10$WyWmkGmUIohMWoakGpNgAey5vaPUrT4FoncvFi6X7ZRe3oh7CYhaa",
+    "role": "patient",
+    "specialization": null,
+    "id": "577fdfb7-aa29-4cd2-ab7c-fb50c4b163c4",
+    "createdAt": "2025-09-10T08:10:18.254Z"
+  },
+  {
+    "name": "user1",
+    "email": "user1@gmail.com",
+    "password": "$2b$10$HzSQcMSzvtnA/MAZpEXUc.9GCzPlBHhFhx0K3PzGAUe.57aLikyLG",
+    "role": "patient",
+    "specialization": null,
+    "id": "410a3c47-0a76-4605-80f2-494dde021723",
+    "createdAt": "2025-09-10T08:22:14.641Z"
+  },
+  {
+    "name": "doctor1",
+    "email": "doctor@gmail.com",
+    "password": "$2b$10$EHcHKVNw4te6PLgzMnwbHupt4BCvaMnu/Wxh6E//HZQJiXzTU5/Iu",
+    "role": "doctor",
+    "specialization": "General Medicine",
+    "id": "c4ffe388-5300-4477-a0ff-023610303dc3",
+    "createdAt": "2025-09-10T08:30:31.885Z"
+  }
+]

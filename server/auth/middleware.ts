@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, extractTokenFromHeader, type AuthenticatedUser } from './jwt';
+import { verifyToken, extractTokenFromHeader, type AuthenticatedUser, JWTPayload } from './jwt';
+import jwt from 'jsonwebtoken';
 
 /**
  * JWT Authentication Middleware
@@ -30,7 +31,8 @@ export const authenticateToken = async (
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      role: decoded.role
+      role: decoded.role,
+      specialization: decoded.specialization
     };
     
     next();
@@ -38,14 +40,15 @@ export const authenticateToken = async (
     let message = 'Invalid or expired token';
     let errorCode = 'INVALID_TOKEN';
     
-    if (error instanceof Error) {
-      if (error.message.includes('expired')) {
-        message = 'Token has expired';
-        errorCode = 'TOKEN_EXPIRED';
-      } else if (error.message.includes('Invalid')) {
-        message = 'Invalid token format';
-        errorCode = 'INVALID_TOKEN_FORMAT';
-      }
+    if (error instanceof jwt.TokenExpiredError) {
+      message = 'Token has expired';
+      errorCode = 'TOKEN_EXPIRED';
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      message = 'Invalid token';
+      errorCode = 'INVALID_TOKEN_FORMAT';
+    } else if (error instanceof Error) {
+      message = error.message;
+      errorCode = 'TOKEN_VERIFICATION_FAILED';
     }
     
     res.status(401).json({
@@ -74,7 +77,8 @@ export const optionalAuthentication = async (
         req.user = {
           id: decoded.id,
           email: decoded.email,
-          role: decoded.role
+          role: decoded.role,
+          specialization: decoded.specialization
         };
       } catch (error) {
         // Token is invalid, but we don't block the request

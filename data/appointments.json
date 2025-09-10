@@ -1,0 +1,61 @@
+[
+  {
+    "patientId": "29a7951b-6e3e-40d7-a356-c6644ebc0976",
+    "doctorId": "346a6a12-3393-43e7-b025-50f9537ec4e2",
+    "date": "2025-09-14T07:30:00.000Z",
+    "timeSlot": "13:00",
+    "reason": "fever and headache",
+    "id": "10d4eceb-a5dc-4ca4-bb2f-611a2aed0713",
+    "status": "rejected",
+    "createdAt": "2025-09-10T08:08:41.489Z"
+  },
+  {
+    "patientId": "577fdfb7-aa29-4cd2-ab7c-fb50c4b163c4",
+    "doctorId": "cb22ab70-be2d-4729-99d8-a3130c57c547",
+    "date": "2025-09-12T07:30:00.000Z",
+    "timeSlot": "13:00",
+    "reason": "hello",
+    "id": "a05bc951-4a6c-4f82-a8ec-49ac120a8b05",
+    "status": "confirmed",
+    "createdAt": "2025-09-10T08:13:38.182Z"
+  },
+  {
+    "patientId": "410a3c47-0a76-4605-80f2-494dde021723",
+    "doctorId": "c4ffe388-5300-4477-a0ff-023610303dc3",
+    "date": "2025-09-12T07:30:00.000Z",
+    "timeSlot": "13:00",
+    "reason": "fevere",
+    "id": "01cc4436-1cc7-4d7f-b4ad-055ce3adaf90",
+    "status": "confirmed",
+    "createdAt": "2025-09-10T08:31:19.055Z",
+    "patientNotified": true
+  },
+  {
+    "id": "b14e99da-7fee-4450-b2b7-d885f769bf77",
+    "doctorId": "c4ffe388-5300-4477-a0ff-023610303dc3",
+    "patientId": "410a3c47-0a76-4605-80f2-494dde021723",
+    "date": "2025-09-12T07:30:00.000Z",
+    "timeSlot": "13:00",
+    "status": "confirmed",
+    "reason": "dadada",
+    "doctorComment": "Please arrive 10 mins earl",
+    "clinicAddress": "F. No 123",
+    "clinicPhone": "842714123",
+    "patientNotified": true,
+    "createdAt": "2025-09-10T08:51:09.759Z"
+  },
+  {
+    "id": "9c6f5cb1-4e3c-4679-8616-21365bd7567e",
+    "doctorId": "c4ffe388-5300-4477-a0ff-023610303dc3",
+    "patientId": "410a3c47-0a76-4605-80f2-494dde021723",
+    "date": "2025-09-12T07:30:00.000Z",
+    "timeSlot": "13:00",
+    "status": "pending",
+    "reason": "fever",
+    "doctorComment": null,
+    "clinicAddress": null,
+    "clinicPhone": null,
+    "patientNotified": false,
+    "createdAt": "2025-09-10T09:17:27.888Z"
+  }
+]

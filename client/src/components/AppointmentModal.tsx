@@ -12,14 +12,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Keyboard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const appointmentSchema = z.object({
   doctorId: z.string().min(1, "Please select a doctor"),
   date: z.string().min(1, "Please select a date"),
-  timeSlot: z.string().min(1, "Please select a time slot"),
-  reason: z.string().optional(),
+  timeSlot: z.string().min(1, "Please select a time slot").regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'Invalid time'),
+  reason: z.string().max(300, 'Max 300 characters').optional()
+    .transform(val => val?.trim() || '')
+    .refine(v => !v || v.length === 0 || v.length >=5, { message: 'Reason must be at least 5 characters when provided' }),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -81,7 +83,21 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
   });
 
   const onSubmit = (data: AppointmentFormData) => {
+    // Prevent past date/time submission client side
+    const dt = new Date(data.date + 'T' + data.timeSlot);
+    if (isNaN(dt.getTime()) || dt.getTime() < Date.now() - 60000) {
+      toast({ title: 'Invalid date/time', description: 'Please choose a future date & time', variant: 'destructive' });
+      return;
+    }
     createAppointment.mutate(data);
+  };
+
+  const [showHindiKeyboard, setShowHindiKeyboard] = useState(false);
+  const hindiChars = ['अ','आ','इ','ई','उ','ऊ','ए','ऐ','ओ','औ','क','ख','ग','घ','च','छ','ज','झ','ट','ठ','ड','ढ','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','ऋ','ँ','ं','ः','।'];
+
+  const appendHindiChar = (ch: string) => {
+    const current = form.getValues('reason') || '';
+    form.setValue('reason', current + ch);
   };
 
   return (
@@ -109,7 +125,7 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {doctors?.map((doctor: any) => (
+                      {(doctors as any[] | undefined)?.map((doctor: any) => (
                         <SelectItem key={doctor.id} value={doctor.id}>
                           {doctor.name} - {t(doctor.specialization?.toLowerCase().replace(" ", "") || "generalMedicine")}
                         </SelectItem>
@@ -168,7 +184,12 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("reasonForVisit")}</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>{t("reasonForVisit")}</FormLabel>
+                    <Button type="button" size="sm" variant={showHindiKeyboard ? 'default':'outline'} onClick={() => setShowHindiKeyboard(s=>!s)} className="h-6 px-2 text-xs">
+                      <Keyboard className="w-3 h-3 mr-1"/>हिन्दी
+                    </Button>
+                  </div>
                   <FormControl>
                     <Textarea 
                       {...field} 
@@ -177,7 +198,18 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                       data-testid="textarea-reason"
                     />
                   </FormControl>
+                  <div className="flex justify-end text-xs text-muted-foreground mt-1">{form.watch('reason')?.length || 0}/300</div>
                   <FormMessage />
+                  {showHindiKeyboard && (
+                    <div className="grid grid-cols-10 gap-1 mt-2 p-2 border rounded bg-muted/50 max-h-32 overflow-y-auto text-sm">
+                      {hindiChars.map(c => (
+                        <button type="button" key={c} onClick={() => appendHindiChar(c)} className="px-1 py-1 bg-background border rounded hover:bg-accent">
+                          {c}
+                        </button>
+                      ))}
+                      <button type="button" onClick={() => form.setValue('reason', (form.getValues('reason')||'').slice(0,-1))} className="col-span-2 px-1 py-1 bg-destructive text-destructive-foreground rounded">⌫</button>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />

@@ -6,6 +6,7 @@ export interface JWTPayload {
   id: string;
   email: string;
   role?: string;
+  specialization?: string;
   iat?: number;
   exp?: number;
 }
@@ -15,6 +16,7 @@ export interface AuthenticatedUser {
   id: string;
   email: string;
   role?: string;
+  specialization?: string;
 }
 
 // Extend Express Request interface to include user
@@ -42,16 +44,15 @@ if (!JWT_SECRET) {
  */
 export const generateToken = async (
   payload: Omit<JWTPayload, 'iat' | 'exp'>,
-  expiresIn: string | number = JWT_EXPIRES_IN
+  expiresIn = JWT_EXPIRES_IN
 ): Promise<string> => {
   try {
-    const options: SignOptions = {
+    const token = jwt.sign(payload, JWT_SECRET as string, {
       expiresIn: expiresIn as string,
       issuer: 'sehat-saathi',
       audience: 'sehat-saathi-users'
-    };
+    } as SignOptions);
     
-    const token = jwt.sign(payload, JWT_SECRET as string, options);
     return token;
   } catch (error) {
     throw new Error('Failed to generate JWT token');

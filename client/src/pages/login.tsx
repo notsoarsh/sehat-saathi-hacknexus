@@ -29,6 +29,9 @@ export default function Login() {
     },
   });
 
+  const emailValue = form.watch('email');
+  const invalidEmail = emailValue && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailValue);
+
   const onSubmit = async (data: LoginRequest) => {
     try {
       setIsLoading(true);
@@ -82,6 +85,7 @@ export default function Login() {
                         />
                       </FormControl>
                       <FormMessage />
+                      {invalidEmail && <p className="text-xs text-destructive mt-1">Invalid email format</p>}
                     </FormItem>
                   )}
                 />

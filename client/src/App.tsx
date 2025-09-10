@@ -1,17 +1,20 @@
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import "./lib/i18n";
 
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import PatientDashboard from "@/pages/patient-dashboard";
-import DoctorDashboard from "@/pages/doctor-dashboard";
-import NotFound from "@/pages/not-found";
+import { Suspense, lazy } from 'react';
+const Login = lazy(() => import("@/pages/login"));
+const Register = lazy(() => import("@/pages/register"));
+const PatientDashboard = lazy(() => import("@/pages/patient-dashboard"));
+const DoctorDashboard = lazy(() => import("@/pages/doctor-dashboard"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Home = lazy(() => import("@/pages/home"));
 
 // Protected route wrapper
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -51,7 +54,8 @@ function Router() {
   const { user } = useAuth();
 
   return (
-    <Switch>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading...</div>}>
+      <Switch>
       <Route path="/login">
         {user ? <Redirect to="/dashboard" /> : <Login />}
       </Route>
@@ -67,11 +71,12 @@ function Router() {
       </Route>
       
       <Route path="/">
-        {user ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
+        {user ? <Redirect to="/dashboard" /> : <Home />}
       </Route>
       
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </Suspense>
   );
 }
 
@@ -80,10 +85,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>

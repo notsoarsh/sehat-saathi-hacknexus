@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,28 +21,33 @@ import {
   User,
   Phone
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
   // Fetch appointments
-  const { data: appointments } = useQuery({
+  const { data: appointments, isLoading: loadingAppointments } = useQuery({
     queryKey: ["/api/appointments"],
+    refetchInterval: 15000,
   });
 
   // Fetch prescriptions
-  const { data: prescriptions } = useQuery({
+  const { data: prescriptions, isLoading: loadingPrescriptions } = useQuery({
     queryKey: ["/api/prescriptions"],
   });
 
-  const upcomingAppointments = appointments?.filter((apt: any) => 
+  const upcomingAppointments = (appointments as any[] | undefined)?.filter((apt: any) => 
     apt.status === "confirmed" && new Date(apt.date) > new Date()
   ) || [];
 
-  const recentPrescriptions = prescriptions?.slice(0, 2) || [];
+  const recentPrescriptions = (prescriptions as any[] | undefined)?.slice(0, 2) || [];
 
   const handleEmergencyClick = () => {
     alert("Emergency services: Dial 108 for ambulance");
@@ -56,6 +61,21 @@ export default function PatientDashboard() {
       default: return "bg-secondary text-secondary-foreground";
     }
   };
+
+  const seenRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!appointments) return;
+    (appointments as any[] | undefined)?.forEach((apt: any) => {
+      if (apt.status === 'confirmed' && !apt.patientNotified && !seenRef.current.has(apt.id)) {
+        seenRef.current.add(apt.id);
+        apiRequest('POST', `/api/appointments/${apt.id}/ack`).catch(()=>{});
+        toast({
+          title: 'Appointment Confirmed',
+          description: apt.doctorComment ? apt.doctorComment : 'Your appointment has been confirmed.'
+        });
+      }
+    });
+  }, [appointments]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +115,7 @@ export default function PatientDashboard() {
                   <div className="bg-success/10 rounded-lg p-4 text-center">
                     <PillBottle className="text-success text-2xl mb-2 mx-auto" />
                     <p className="text-2xl font-bold text-success" data-testid="stat-prescriptions">
-                      {prescriptions?.length || 0}
+                      { (prescriptions as any[] | undefined)?.length || 0 }
                     </p>
                     <p className="text-sm text-muted-foreground">{t("prescriptions")}</p>
                   </div>
@@ -176,7 +196,13 @@ export default function PatientDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingAppointments.length === 0 ? (
+                  {loadingAppointments ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_,i) => (
+                        <Skeleton key={i} className="h-20 w-full" />
+                      ))}
+                    </div>
+                  ) : upcomingAppointments.length === 0 ? (
                     <p className="text-center py-8 text-muted-foreground">
                       No upcoming appointments
                     </p>
@@ -203,6 +229,16 @@ export default function PatientDashboard() {
                                 minute: '2-digit' 
                               })}
                             </p>
+                            {appointment.doctorComment && (
+                              <p className="text-sm text-primary mt-1">{appointment.doctorComment}</p>
+                            )}
+                            {(appointment.clinicAddress || appointment.clinicPhone) && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {appointment.clinicAddress && <span>{appointment.clinicAddress}</span>}
+                                {appointment.clinicAddress && appointment.clinicPhone && ' | '}
+                                {appointment.clinicPhone && <span>{appointment.clinicPhone}</span>}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -241,7 +277,11 @@ export default function PatientDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentPrescriptions.length === 0 ? (
+                  {loadingPrescriptions ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 2 }).map((_,i) => <Skeleton key={i} className="h-24 w-full" />)}
+                    </div>
+                  ) : recentPrescriptions.length === 0 ? (
                     <p className="text-center py-4 text-muted-foreground">
                       No prescriptions found
                     </p>

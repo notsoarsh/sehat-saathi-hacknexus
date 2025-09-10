@@ -36,6 +36,15 @@ export default function Register() {
   });
 
   const watchRole = form.watch("role");
+  const passwordValue = form.watch('password');
+  const passwordScore = (() => {
+    let score = 0;
+    if (/[A-Z]/.test(passwordValue)) score++;
+    if (/[a-z]/.test(passwordValue)) score++;
+    if (/[0-9]/.test(passwordValue)) score++;
+    if (/[^A-Za-z0-9]/.test(passwordValue)) score++;
+    if (passwordValue.length >= 12) score++;
+    return score; })();
 
   const onSubmit = async (data: RegisterRequest) => {
     try {
@@ -190,6 +199,13 @@ export default function Register() {
                         </div>
                       </FormControl>
                       <FormMessage />
+                      <div className="mt-2">
+                        <div className="h-1 w-full bg-muted rounded">
+                          <div className={`h-1 rounded transition-all ${
+                            passwordScore <=2 ? 'bg-destructive w-1/5' : passwordScore===3 ? 'bg-warning w-3/5' : 'bg-success w-full'}`}></div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Must include upper, lower, number & special char.</p>
+                      </div>
                     </FormItem>
                   )}
                 />
