@@ -88,5 +88,32 @@
     "specialization": "General Medicine",
     "id": "c4ffe388-5300-4477-a0ff-023610303dc3",
     "createdAt": "2025-09-10T08:30:31.885Z"
+  },
+  {
+    "name": "Dr. Abha Vashisht",
+    "email": "abha123@gmail.com",
+    "password": "$2b$10$8WiZR0UatIvIopNs7.j/Kecjj0CRf6B2BvUULfxxRfogixSbFjFi6",
+    "role": "patient",
+    "specialization": null,
+    "id": "41625777-50eb-48a6-930e-069e8acffdf3",
+    "createdAt": "2025-09-10T09:47:16.520Z"
+  },
+  {
+    "name": "Dr. Aanchal Jha",
+    "email": "aanchal@gmail.com",
+    "password": "$2b$10$qIeOo4HOZNRUZk09E6pMz.Q01n/NGtdqtdC7zx6mC1CXYliB3ZceK",
+    "role": "doctor",
+    "specialization": "Gynecology",
+    "id": "c4a92348-ae6b-443e-9031-eeb19e886021",
+    "createdAt": "2025-09-10T09:48:06.123Z"
+  },
+  {
+    "name": "Rohit",
+    "email": "rohit@gmail.com",
+    "password": "$2b$10$XxFfHC.w1yVGaBUvecbBSuopPRQDwym23EgRdp5wMgK5HfB0lcN7m",
+    "role": "patient",
+    "specialization": null,
+    "id": "d8c1fcc9-94a7-4c65-8492-45633a9437c9",
+    "createdAt": "2025-09-10T09:49:03.582Z"
   }
 ]

@@ -17,7 +17,8 @@
     "reason": "hello",
     "id": "a05bc951-4a6c-4f82-a8ec-49ac120a8b05",
     "status": "confirmed",
-    "createdAt": "2025-09-10T08:13:38.182Z"
+    "createdAt": "2025-09-10T08:13:38.182Z",
+    "patientNotified": true
   },
   {
     "patientId": "410a3c47-0a76-4605-80f2-494dde021723",
