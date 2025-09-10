@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { 
@@ -9,25 +8,12 @@ import {
   insertAppointmentSchema,
   insertPrescriptionSchema 
 } from "@shared/schema";
-
-const JWT_SECRET = process.env.JWT_SECRET || "sehat-saathi-secret-key";
-
-// Middleware to verify JWT token
-const verifyToken = (req: any, res: any, next: any) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
+import { 
+  generateToken, 
+  authenticateToken, 
+  requireRole, 
+  authenticateAndAuthorize 
+} from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth Routes
@@ -51,11 +37,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Generate JWT
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role }, 
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      const token = await generateToken({
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      });
 
       // Remove password from response
       const { password, ...userResponse } = user;
@@ -83,11 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate JWT
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role }, 
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      const token = await generateToken({
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      });
 
       // Remove password from response
       const { password: _, ...userResponse } = user;
@@ -98,9 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", verifyToken, async (req: any, res) => {
+  app.get("/api/auth/me", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUser(req.user.userId);
+      const user = await storage.getUser(req.user!.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -113,12 +99,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Appointment Routes
-  app.post("/api/appointments", verifyToken, async (req: any, res) => {
+  app.post("/api/appointments", authenticateToken, async (req, res) => {
     try {
       const appointmentData = insertAppointmentSchema.parse(req.body);
       
       // Ensure patient can only book for themselves
-      if (req.user.role === "patient" && appointmentData.patientId !== req.user.userId) {
+      if (req.user!.role === "patient" && appointmentData.patientId !== req.user!.id) {
         return res.status(403).json({ message: "Can only book appointments for yourself" });
       }
 
@@ -129,14 +115,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/appointments", verifyToken, async (req: any, res) => {
+  app.get("/api/appointments", authenticateToken, async (req, res) => {
     try {
       let appointments;
       
-      if (req.user.role === "doctor") {
-        appointments = await storage.getAppointmentsByDoctor(req.user.userId);
+      if (req.user!.role === "doctor") {
+        appointments = await storage.getAppointmentsByDoctor(req.user!.id);
       } else {
-        appointments = await storage.getAppointmentsByUser(req.user.userId);
+        appointments = await storage.getAppointmentsByUser(req.user!.id);
       }
 
       // Get user details for appointments
@@ -159,15 +145,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/appointments/:id/status", verifyToken, async (req: any, res) => {
+  app.patch("/api/appointments/:id/status", ...authenticateAndAuthorize("doctor"), async (req, res) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
-
-      // Only doctors can update appointment status
-      if (req.user.role !== "doctor") {
-        return res.status(403).json({ message: "Only doctors can update appointment status" });
-      }
 
       const appointment = await storage.updateAppointmentStatus(id, status);
       if (!appointment) {
@@ -181,17 +162,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prescription Routes
-  app.post("/api/prescriptions", verifyToken, async (req: any, res) => {
+  app.post("/api/prescriptions", ...authenticateAndAuthorize("doctor"), async (req, res) => {
     try {
       const prescriptionData = insertPrescriptionSchema.parse(req.body);
 
-      // Only doctors can create prescriptions
-      if (req.user.role !== "doctor") {
-        return res.status(403).json({ message: "Only doctors can create prescriptions" });
-      }
-
       // Ensure doctor can only create prescriptions for their own consultations
-      if (prescriptionData.doctorId !== req.user.userId) {
+      if (prescriptionData.doctorId !== req.user!.id) {
         return res.status(403).json({ message: "Can only create prescriptions for your own consultations" });
       }
 
@@ -202,16 +178,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/prescriptions", verifyToken, async (req: any, res) => {
+  app.get("/api/prescriptions", authenticateToken, async (req, res) => {
     try {
       let prescriptions;
 
-      if (req.user.role === "patient") {
-        prescriptions = await storage.getPrescriptionsByPatient(req.user.userId);
+      if (req.user!.role === "patient") {
+        prescriptions = await storage.getPrescriptionsByPatient(req.user!.id);
       } else {
         // For doctors, get all prescriptions they've created
         const allPrescriptions = await storage.getPrescriptionsByPatient(""); // This would need a different method
-        prescriptions = allPrescriptions.filter(p => p.doctorId === req.user.userId);
+        prescriptions = allPrescriptions.filter(p => p.doctorId === req.user!.id);
       }
 
       // Get doctor and patient details

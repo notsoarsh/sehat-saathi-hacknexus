@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Authentication Test - Sehat Saathi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .token-display {
+            word-break: break-all;
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 Sehat Saathi - JWT Authentication Test</h1>
+    
+    <div class="container">
+        <h2>1. Register New User</h2>
+        <div class="section">
+            <input type="text" id="regName" placeholder="Full Name" value="Test User">
+            <input type="email" id="regEmail" placeholder="Email" value="test@example.com">
+            <input type="password" id="regPassword" placeholder="Password" value="password123">
+            <input type="password" id="regConfirmPassword" placeholder="Confirm Password" value="password123">
+            <select id="regRole">
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+            </select>
+            <input type="text" id="regSpecialization" placeholder="Specialization (for doctors only)" style="display:none;">
+            <button onclick="registerUser()">Register User</button>
+            <div id="regResponse" class="response"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>2. Login User</h2>
+        <div class="section">
+            <input type="email" id="loginEmail" placeholder="Email" value="test@example.com">
+            <input type="password" id="loginPassword" placeholder="Password" value="password123">
+            <button onclick="loginUser()">Login</button>
+            <div id="loginResponse" class="response"></div>
+            <div id="tokenDisplay" class="token-display" style="display:none;">
+                <strong>JWT Token:</strong><br>
+                <span id="tokenValue"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>3. Test Protected Endpoints</h2>
+        <div class="section">
+            <h3>Current Token Status:</h3>
+            <div id="tokenStatus" class="info">No token stored</div>
+            
+            <h3>Test Endpoints:</h3>
+            <button onclick="testPublicEndpoint()">Test Public Endpoint (/api/doctors)</button>
+            <button onclick="testProtectedEndpoint()">Test Protected Endpoint (/api/auth/me)</button>
+            <button onclick="testAppointments()">Test Appointments (/api/appointments)</button>
+            <button onclick="testDoctorOnly()">Test Doctor Only Endpoint</button>
+            
+            <div id="testResponse" class="response"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>4. Manual Token Testing</h2>
+        <div class="section">
+            <textarea id="manualToken" placeholder="Paste JWT token here for manual testing"></textarea>
+            <button onclick="setManualToken()">Use This Token</button>
+            <button onclick="clearToken()">Clear Token</button>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+
+        // Show/hide specialization field based on role
+        document.getElementById('regRole').addEventListener('change', function() {
+            const specializationField = document.getElementById('regSpecialization');
+            if (this.value === 'doctor') {
+                specializationField.style.display = 'block';
+                specializationField.placeholder = 'Specialization (e.g., General Medicine)';
+            } else {
+                specializationField.style.display = 'none';
+            }
+        });
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(currentToken && { 'Authorization': `Bearer ${currentToken}` }),
+                        ...options.headers
+                    }
+                });
+                
+                const data = await response.json();
+                return { response, data, status: response.status };
+            } catch (error) {
+                return { error: error.message, status: 0 };
+            }
+        }
+
+        async function registerUser() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const role = document.getElementById('regRole').value;
+            const specialization = document.getElementById('regSpecialization').value;
+
+            const userData = {
+                name,
+                email,
+                password,
+                confirmPassword,
+                role
+            };
+
+            if (role === 'doctor' && specialization) {
+                userData.specialization = specialization;
+            }
+
+            const result = await makeRequest('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+
+            document.getElementById('regResponse').textContent = 
+                `Status: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+
+            if (result.data && result.data.token) {
+                currentToken = result.data.token;
+                updateTokenStatus();
+                document.getElementById('loginEmail').value = email;
+                document.getElementById('loginPassword').value = password;
+            }
+        }
+
+        async function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const result = await makeRequest('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+
+            document.getElementById('loginResponse').textContent = 
+                `Status: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+
+            if (result.data && result.data.token) {
+                currentToken = result.data.token;
+                updateTokenStatus();
+                document.getElementById('tokenDisplay').style.display = 'block';
+                document.getElementById('tokenValue').textContent = result.data.token;
+            }
+        }
+
+        async function testPublicEndpoint() {
+            const result = await makeRequest('/api/doctors');
+            document.getElementById('testResponse').textContent = 
+                `GET /api/doctors\nStatus: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+        }
+
+        async function testProtectedEndpoint() {
+            const result = await makeRequest('/api/auth/me');
+            document.getElementById('testResponse').textContent = 
+                `GET /api/auth/me\nStatus: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+        }
+
+        async function testAppointments() {
+            const result = await makeRequest('/api/appointments');
+            document.getElementById('testResponse').textContent = 
+                `GET /api/appointments\nStatus: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+        }
+
+        async function testDoctorOnly() {
+            // Test appointment status update (doctor only)
+            const result = await makeRequest('/api/appointments/test-id/status', {
+                method: 'PATCH',
+                body: JSON.stringify({ status: 'confirmed' })
+            });
+            document.getElementById('testResponse').textContent = 
+                `PATCH /api/appointments/test-id/status\nStatus: ${result.status}\n${JSON.stringify(result.data || result.error, null, 2)}`;
+        }
+
+        function setManualToken() {
+            const token = document.getElementById('manualToken').value.trim();
+            if (token) {
+                currentToken = token;
+                updateTokenStatus();
+            }
+        }
+
+        function clearToken() {
+            currentToken = null;
+            updateTokenStatus();
+            document.getElementById('tokenDisplay').style.display = 'none';
+            document.getElementById('manualToken').value = '';
+        }
+
+        function updateTokenStatus() {
+            const statusDiv = document.getElementById('tokenStatus');
+            if (currentToken) {
+                try {
+                    const payload = JSON.parse(atob(currentToken.split('.')[1]));
+                    const exp = new Date(payload.exp * 1000);
+                    const isExpired = exp < new Date();
+                    
+                    statusDiv.className = isExpired ? 'error' : 'success';
+                    statusDiv.innerHTML = `
+                        <strong>Token Available</strong><br>
+                        User: ${payload.email} (${payload.role})<br>
+                        Expires: ${exp.toLocaleString()}<br>
+                        Status: ${isExpired ? 'EXPIRED' : 'VALID'}
+                    `;
+                } catch (e) {
+                    statusDiv.className = 'error';
+                    statusDiv.textContent = 'Invalid token format';
+                }
+            } else {
+                statusDiv.className = 'info';
+                statusDiv.textContent = 'No token stored';
+            }
+        }
+
+        // Initialize
+        updateTokenStatus();
+    </script>
+</body>
+</html>
